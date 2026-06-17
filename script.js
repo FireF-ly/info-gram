@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ==========================================
-    // 1. GESTION DU STOCKAGE (LocalStorage)
-    // ==========================================
+    ///// GESTION DU STOCKAGE (LocalStorage) /////
 
     function getAllUsers() {
         const data = localStorage.getItem('minibook_users');
@@ -27,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return data ? JSON.parse(data) : null;
     }
 
-    // Gestion des abonnements (Follow) propres à chaque utilisateur
+    // Gestion des abonnements propres à chaque utilisateur
     function getFollows(userEmail) {
         const data = localStorage.getItem(`minibook_follows_${userEmail}`);
         return data ? JSON.parse(data) : [];
@@ -57,16 +55,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${date} — ${time}`;
     }
 
-    // Avatar de secours si l'utilisateur ne charge pas de photo
+    // Avatar par défaut si l'utilisateur ne charge pas de photo
     const getDefaultAvatar = (nom, prenom) => {
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(prenom + '+' + nom)}&background=0F0CCC&color=fff&size=100`;
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(nom + '+' + prenom)}&background=0F0CCC&color=fff&size=100`;
     };
 
-
-    // ==========================================
-    // 3. CONTROLE DES ACCES ET NAVIGATION
-    // ==========================================
-
+    ///// CONTROLE DES ACCES ET NAVIGATION /////
+    
     const currentUser = getCurrentSession();
 
     // Remplissage des infos de la barre de navigation si connecté
@@ -78,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (navName) navName.textContent = `${currentUser.prenom} ${currentUser.nom}`;
     }
 
-    // Pages protégées : feed.html, account.html, modi_account.html, messages.html
+    // Pages protégées et demandent un compte actif pour y accéder : feed.html, account.html, modi_account.html, messages.html
     const requiresAuth = document.getElementById('feed-posts')
         || document.getElementById('display-photo')
         || document.getElementById('form-edit')
@@ -89,11 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-
-    // ==========================================
-    // 4. LOGIQUE PAR INTERFACE (Détection par élément)
-    // ==========================================
-
+    ///// LOGIQUE PAR INTERFACE /////
+    
     // --- PAGE INSCRIPTION ---
     const formInscription = document.getElementById('form-inscription');
     if (formInscription) {
@@ -125,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const confirm = document.getElementById('reg-confirm').value;
 
             if (!nom || !prenom || !email || !password || !confirm) {
-                alert('Tous les champs textuels sont obligatoires.');
+                alert('Tous les champs sont obligatoires.');
                 return;
             }
             if (password !== confirm) {
@@ -184,8 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- PAGE COMPTE & DASHBOARD (STATISTIQUES) ---
-    // Détecté via display-photo (account.html)
+    // --- PAGE COMPTE AVEC STATISTIQUES ---
+    // Détecté via display-photo 
     const displayPhoto = document.getElementById('display-photo');
     if (displayPhoto && currentUser) {
         const allPosts = getAllPosts();
@@ -208,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('stat-likes').textContent = totalLikes;
         document.getElementById('stat-comments').textContent = totalComments;
 
-        // Historique personnel des publications — classes alignées sur le CSS
+        // Historique personnel des publications
         const postsContainer = document.getElementById('display-posts');
         if (postsContainer) {
             postsContainer.innerHTML = myPosts.slice().reverse().map(p => `
@@ -235,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- PAGE EDITEUR DE PROFIL (modi_account.html) ---
+    // --- PAGE EDITEUR DE PROFIL ---
     const formEdit = document.getElementById('form-edit');
     if (formEdit && currentUser) {
         // Pré-remplissage automatique des inputs
@@ -311,7 +303,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- PAGE PRINCIPALE : FIL D'ACTUALITÉ & RECHERCHE (feed.html) ---
+    // --- PAGE FIL D'ACTUALITÉ & RECHERCHE ---
+    
     const feedPostsContainer = document.getElementById('feed-posts');
     if (feedPostsContainer && currentUser) {
 
@@ -370,13 +363,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return matchText && matchAuthor;
             });
 
-            // TRI CRUCIAL (Exigence C du sujet) : Priorité aux personnes suivies (Followed)
+            // Tri de priorité aux personnes suivies
             filteredPosts.sort((a, b) => {
                 const aIsFollowed = currentFollows.includes(a.email) ? 1 : 0;
                 const bIsFollowed = currentFollows.includes(b.email) ? 1 : 0;
 
                 if (aIsFollowed !== bIsFollowed) {
-                    return bIsFollowed - aIsFollowed; // Les comptes suivis montent en haut
+                    return bIsFollowed - aIsFollowed; 
                 }
                 return b.id - a.id; // Tri chronologique inverse de base
             });
@@ -392,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Gestion de l'écran "Aucun résultat" — classes CSS : .no-result
+            // Gestion de l'écran "Aucun résultat"
             if (filteredPosts.length === 0) {
                 feedPostsContainer.innerHTML = `
                     <div class="no-result">
@@ -401,8 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>`;
                 return;
             }
-
-            // Injection HTML — toutes les classes correspondent au CSS
+            
             feedPostsContainer.innerHTML = filteredPosts.map(p => {
                 const authorObj = users.find(u => u.email === p.email);
                 const avatarUrl = authorObj?.photo || getDefaultAvatar(p.nomAuteur, p.prenomAuteur);
@@ -410,8 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userHasLiked = p.likes?.includes(currentUser.email) || false;
                 const userIsFollowing = currentFollows.includes(p.email);
 
-                // Génération conditionnelle du bouton Follow/Unfollow
-                // .btn-retour utilisé car correspond au style gris secondaire du CSS
+                // Génération conditionnelle du bouton Suivre/Ne plus suivre
                 let followBtnHtml = '';
                 if (!isOwner) {
                     followBtnHtml = `
@@ -457,7 +448,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Ecouteurs pour la recherche en temps réel
-        // + alias global window.filterPosts pour les attributs oninput du HTML (feed.html)
         document.getElementById('search-text')?.addEventListener('input', updateFeedDisplay);
         document.getElementById('search-author')?.addEventListener('input', updateFeedDisplay);
         window.filterPosts = updateFeedDisplay;
@@ -558,10 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFeedDisplay();
     }
 
-
-    // ==========================================
-    // 5. PAGE MESSAGES (messages.html)
-    // ==========================================
+    ///// PAGE MESSAGES /////
 
     const convList = document.getElementById('conv-list');
     if (convList && currentUser) {
@@ -584,7 +571,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const otherName = otherUser ? `${otherUser.prenom} ${otherUser.nom}` : otherEmail;
                 const otherPhoto = otherUser?.photo || getDefaultAvatar(otherUser?.nom || '?', otherUser?.prenom || '?');
                 const lastMsg = c.messages[c.messages.length - 1];
-                // Classe active CSS : .conv-item.active (avec bordure bleue à gauche)
                 const isActive = c.id === activeConvId ? 'active' : '';
 
                 return `
@@ -618,7 +604,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="messages-list" id="chat-messages">
                     ${conv.messages.map(m => {
-                        // Classes CSS : .msg-bubble-wrap avec .mine ou .theirs, bulle : .bubble
                         const isMine = m.from === currentUser.email;
                         return `
                             <div class="msg-bubble-wrap ${isMine ? 'mine' : 'theirs'}">
@@ -635,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const msgContainer = document.getElementById('chat-messages');
             if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
 
-            // Envoi via touche Entrée — l'input s'appelle #msg-input dans le CSS
+            // Envoi via touche Entrée
             const input = document.getElementById('msg-input');
             if (input) {
                 input.addEventListener('keydown', (e) => {
@@ -683,7 +668,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Classes CSS : .new-conv-user-item pour les lignes de résultat
             newConvUserlist.innerHTML = users.map(u => `
                 <div class="new-conv-user-item" onclick="startConversationWith('${u.email}')">
                     <img src="${u.photo || getDefaultAvatar(u.nom, u.prenom)}" alt="">
@@ -696,7 +680,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (btnNewConv && newConvModal) {
             btnNewConv.onclick = () => {
-                // La modale CSS s'ouvre via display:block (pas flex) — class .open non utilisée
                 newConvModal.style.display = 'block';
                 if (userSearchInput) {
                     userSearchInput.value = '';
